@@ -186,7 +186,15 @@ impl PgConnection {
     fn fetch_type_by_oid(&mut self, oid: Oid) -> BoxFuture<'_, Result<PgTypeInfo, Error>> {
         Box::pin(async move {
             let (name, typ_type, category, relation_id, element, base_type): (String, i8, i8, Oid, Oid, Oid) = query_as(
-                "SELECT typname, typtype, typcategory, typrelid, typelem, typbasetype FROM pg_catalog.pg_type WHERE oid = $1",
+                r#"
+                    SELECT
+                        n.nspname || '.' || t.typname, t.typtype, t.typcategory, t.typrelid, t.typelem, t.typbasetype
+                    FROM
+                        pg_catalog.pg_type t
+                    LEFT JOIN
+                        pg_catalog.pg_namespace n ON t.typnamespace = n.oid
+                    WHERE t.oid = $1
+                    "#,
             )
             .bind(oid)
             .fetch_one(&mut *self)
