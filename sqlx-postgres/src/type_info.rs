@@ -1154,7 +1154,8 @@ impl PartialEq<PgType> for PgType {
             true
         } else {
             // Otherwise, perform a match on the name
-            self.name().eq_ignore_ascii_case(other.name())
+            std::iter::zip(self.name().rsplitn(2, '.'), other.name().rsplitn(2, '.'))
+                .all(|(part, other_part)| part.eq_ignore_ascii_case(other_part))
         }
     }
 }
